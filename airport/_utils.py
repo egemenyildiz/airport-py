@@ -1,7 +1,10 @@
+import logging
 import subprocess
 import re
 import _datatypes as datatypes
-import os 
+import os
+
+from airport._constants import SCAN_RESULTS_GROUPED_PATTERN
 
 AIRPORT_PATH = [os.environ.get(
     'AIRPORT_PATH', 
@@ -16,24 +19,24 @@ def call_cmd(*args):
     return out
 
 
-def split_lines(lines, start=0):
-    return lines.split('\n')[start:]
+def split_lines(lines, start=0, remove_empty_lines=True):
+    split = lines.split('\n')[start:]
+    if remove_empty_lines:
+        return filter(None, split)
+    return split
 
 
 def reformat_scan_results(results):
-    def reformat_scan_result_line(result):
-        try:
-            result = re.split('\s+', result)
-            node_args = (result[1:5] + [True if result[5] == 'Y' else False, ] +
-                         [result[6] if result[6] != '--' else None] +
-                         [' '.join(result[7:]).strip()])
-        except IndexError:
-            pass
-        else:
-            return datatypes.NodeResult(*node_args)
+    def clean_line(result):
+        matches = re.match(re.compile(SCAN_RESULTS_GROUPED_PATTERN, re.IGNORECASE), result)
+        if matches:
+            cleaned_node = {k: v.strip() for k, v in matches.groupdict().items()}
+            return datatypes.NodeResult(**cleaned_node)
+        logging.error('Parse error: {}'.format(result))
 
-    results_in_lines = split_lines(results, start=1)
-    return filter(None, map(reformat_scan_result_line, results_in_lines))
+    lines = split_lines(results, start=1)
+    cleaned = filter(None, map(clean_line, lines))
+    return cleaned
 
 
 def reformat_info_result(result):
@@ -44,6 +47,7 @@ def reformat_info_result(result):
     results_in_lines = filter(lambda line: line, split_lines(result))
     info_args = map(reformat_info_result_line, results_in_lines)
     return datatypes.InfoResult(*info_args)
+
 
 def build_airport_cmd(params):
     return AIRPORT_PATH + params
