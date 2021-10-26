@@ -7,4 +7,4 @@
 ### Changed
 - Improved scan result pattern matching.
 
-[0.0.1]: https://github.com/egemenyildiz/airport-py/releases/tag/v0.1.1
+[0.1.1]: https://github.com/egemenyildiz/airport-py/releases/tag/v0.1.1
