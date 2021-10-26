@@ -13,7 +13,7 @@ with open('LICENSE') as f:
 
 setup(
     name='airport-py',
-    version='0.1.0',
+    version='0.1.1',
     description='Mac OS X airport command result parser',
     long_description=readme,
     author='Egemen Yildiz',
